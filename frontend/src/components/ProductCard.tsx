@@ -12,13 +12,13 @@ export function ProductCard({ product }: { product: Product }) {
 
   useEffect(() => {
     if (!justAdded) return;
-    const timer = window.setTimeout(() => setJustAdded(false), 10_000);
+    const timer = window.setTimeout(() => setJustAdded(false), 500);
     return () => window.clearTimeout(timer);
   }, [justAdded]);
 
   const addToCart = () => {
     if (!canAdd || justAdded) return;
-    add(product);
+    add(product, 2);
     setJustAdded(true);
   };
 

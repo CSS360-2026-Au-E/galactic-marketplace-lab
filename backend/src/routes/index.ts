@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getProduct, listCategories, listProducts, listReviews } from "../controllers/products.js";
+import { createReview, getProduct, listCategories, listProducts, listReviews } from "../controllers/products.js";
 import { validateCoupon } from "../controllers/coupons.js";
 import { createOrder, getOrder, listOrders } from "../controllers/orders.js";
 
@@ -9,6 +9,7 @@ api.get("/products", listProducts);
 api.get("/products/:id", getProduct);
 api.get("/categories", listCategories);
 api.get("/products/:id/reviews", listReviews);
+api.post("/products/:id/reviews", createReview);
 api.post("/coupons/validate", validateCoupon);
 api.post("/orders", createOrder);
 api.get("/orders", listOrders);

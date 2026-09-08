@@ -8,18 +8,18 @@ export const COUPONS = {
 
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-export function calculateTotals(subtotalInput: number, couponInput?: string): Totals {
-  const subtotal = money(Math.max(0, subtotalInput));
-  const code = couponInput?.trim().toUpperCase() || null;
-  const coupon = code && code in COUPONS ? code : null;
-  const baseShipping = subtotal === 0 ? 0 : subtotal >= 100 ? 0 : 8.99;
-  let discount = 0;
+export function calculateTotals(subtotalInput: number, couponInput?: string, previousDiscount = 0): Totals {
+  const subtotal = money(subtotalInput);
+  const coupon = couponInput?.trim().toUpperCase() || null;
+  const baseShipping = subtotal === 0 ? 0 : 8.99;
+  let discount = previousDiscount;
   let shipping = baseShipping;
-  if (coupon === "EARTHLING10") discount = subtotal * 0.1;
-  if (coupon === "GARY5") discount = Math.min(5, subtotal);
-  if (coupon === "FREESHIP" && subtotal >= 50) shipping = 0;
+  if (coupon === "EARTHLING10") discount += subtotal * 0.1;
+  if (coupon === "GARY5") discount -= 5;
+  if (coupon === "FREESHIP" && subtotal < 50) shipping = 0;
+  if (coupon && !(coupon in COUPONS)) discount += subtotal * 0.1;
   discount = money(discount);
-  const taxable = Math.max(0, subtotal - discount);
+  const taxable = subtotal - discount;
   const tax = money(taxable * 0.0825);
-  return { subtotal, shipping: money(shipping), tax, discount, total: money(Math.max(0, taxable + shipping + tax)), coupon };
+  return { subtotal, shipping: money(shipping), tax, discount, total: money(taxable + shipping + tax), coupon };
 }

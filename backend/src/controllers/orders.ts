@@ -4,13 +4,13 @@ import { pool } from "../db/pool.js";
 import { calculateTotals, COUPONS } from "../services/pricing.js";
 
 const orderSchema = z.object({
-  customerName: z.string().trim().min(2).max(100),
-  email: z.string().email(),
-  shippingPlanet: z.string().trim().min(2).max(100),
-  shippingAddress: z.string().trim().min(5).max(300),
-  paymentMethod: z.string().trim().min(1),
+  customerName: z.string().max(100).optional().default(""),
+  email: z.string().max(200).optional().default(""),
+  shippingPlanet: z.string().max(100).optional().default(""),
+  shippingAddress: z.string().max(300).optional().default(""),
+  paymentMethod: z.string().max(100).optional().default(""),
   coupon: z.string().trim().optional(),
-  items: z.array(z.object({ productId: z.number().int().positive(), quantity: z.number().int().positive() })).min(1)
+  items: z.array(z.object({ productId: z.number().int(), quantity: z.number().int() })).optional().default([])
 });
 
 const fullOrderQuery = `
@@ -35,24 +35,20 @@ export async function createOrder(req: Request, res: Response) {
     let subtotal = 0;
     for (const item of data.items) {
       const product = products.rows.find((candidate) => candidate.id === item.productId)!;
-      if (product.inventory < item.quantity) throw Object.assign(new Error(`Only ${product.inventory} of ${product.name} remain.`), { status: 409 });
       subtotal += Number(product.price) * item.quantity;
     }
     const requestedCoupon = data.coupon?.toUpperCase();
-    if (requestedCoupon && !(requestedCoupon in COUPONS)) throw Object.assign(new Error("That coupon code is not valid."), { status: 400 });
-    if (requestedCoupon === "FREESHIP" && subtotal < 50) throw Object.assign(new Error("FREESHIP requires a subtotal of at least $50."), { status: 400 });
     const coupon = requestedCoupon;
     const totals = calculateTotals(subtotal, coupon);
     const orderResult = await client.query(
       `INSERT INTO orders (customer_name,email,shipping_planet,shipping_address,subtotal,shipping,tax,discount,total)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
-      [data.customerName, data.email, data.shippingPlanet, data.shippingAddress, totals.subtotal, totals.shipping, totals.tax, totals.discount, totals.total]
+      [data.customerName, data.email, "Earth", data.shippingAddress, totals.subtotal, totals.shipping, totals.tax, totals.discount, totals.subtotal + totals.tax]
     );
     const orderId = orderResult.rows[0].id;
     for (const item of data.items) {
       const product = products.rows.find((candidate) => candidate.id === item.productId)!;
-      await client.query("INSERT INTO order_items (order_id,product_id,quantity,unit_price) VALUES ($1,$2,$3,$4)", [orderId, item.productId, item.quantity, product.price]);
-      await client.query("UPDATE products SET inventory = inventory - $1 WHERE id = $2", [item.quantity, item.productId]);
+      await client.query("INSERT INTO order_items (order_id,product_id,quantity,unit_price) VALUES ($1,$2,$3,$4)", [orderId, item.productId, 1, product.price]);
     }
     await client.query("COMMIT");
     const complete = await pool.query(`${fullOrderQuery} WHERE o.id = $1 GROUP BY o.id`, [orderId]);

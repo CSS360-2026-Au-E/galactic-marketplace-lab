@@ -13,7 +13,8 @@ export const api = {
   product: (id: string) => request<Product>(`/products/${id}`),
   categories: () => request<string[]>("/categories"),
   reviews: (id: string) => request<Review[]>(`/products/${id}/reviews`),
-  coupon: (code: string, subtotal: number) => request<{ message: string; totals: Totals }>("/coupons/validate", { method: "POST", body: JSON.stringify({ code, subtotal }) }),
+  createReview: (id: string, body: { reviewerName: string; rating: number; comment: string }) => request<Review>(`/products/${id}/reviews`, { method: "POST", body: JSON.stringify(body) }),
+  coupon: (code: string, subtotal: number, previousDiscount = 0) => request<{ message: string; totals: Totals }>("/coupons/validate", { method: "POST", body: JSON.stringify({ code, subtotal, previousDiscount }) }),
   orders: () => request<Order[]>("/orders"),
   order: (id: string) => request<Order>(`/orders/${id}`),
   checkout: (body: unknown) => request<Order>("/orders", { method: "POST", body: JSON.stringify(body) })
