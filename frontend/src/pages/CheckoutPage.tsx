@@ -4,7 +4,6 @@ import { OrderSummary } from "../components/OrderSummary";
 import { useCart } from "../context/CartContext";
 import { api } from "../services/api";
 import type { AppliedCoupon, Totals } from "../types";
-import { baseTotals, money } from "../utils/money";
 
 export function CheckoutPage() {
   const cart = useCart();
