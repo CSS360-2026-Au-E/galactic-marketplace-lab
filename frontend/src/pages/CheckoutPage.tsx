@@ -56,7 +56,7 @@ export function CheckoutPage() {
     onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [name]: event.target.value })
   });
 
-  return <div className="wrap page">
+  return<>
     <Link to="/cart" className="back-link">← Return to cart</Link>
     <div className="catalog-head"><span className="kicker">Final docking procedure</span><h1>Checkout</h1><p>No real payment will be processed. Gary promises.</p></div>
     <div className="checkout-layout">
@@ -82,5 +82,6 @@ export function CheckoutPage() {
         <OrderSummary totals={displayedTotals} appliedCoupons={appliedCoupons}/>
       </aside>
     </div>
-  </div>;
+    </>
+    ;
 }
